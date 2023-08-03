@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 
@@ -10,7 +11,16 @@ import (
 )
 
 func main() {
-	agg := &aggregator.Aggregator[int, []int, int]{
+	// create a new aggregator for group a bunch of int tasks and sum them up into a string. with:
+	// * 5 workers
+	// * do sum up when worker get 50 numbers
+	// * do sum up every 5 milliseconds if worker get less than 50 numbers
+	// * reset - prepare a new []int to collect new numbers
+	// * reduce - append collected number (task) to sum object ([]int)
+	// * action - sum up all numbers in the sum object ([]int) and return a string
+	// * before action - print out the sum object ([]int)
+	// * after action - print out the sum object ([]int), result (string) and error (error)
+	agg := &aggregator.Aggregator[int, []int, string]{
 		WorkerCount:   5,
 		BatchSize:     50,
 		BatchInterval: 5 * time.Millisecond,
@@ -24,22 +34,24 @@ func main() {
 			log.Println("before act sum is", sum)
 			return nil
 		},
-		Action: func(sum []int) (int, error) {
+		Action: func(sum []int) (string, error) {
 			rst := 0
 			for _, v := range sum {
 				rst += v
 			}
-			return rst, nil
+			return strconv.Itoa(rst), nil
 		},
-		AfterAct: func(sum []int, rst int, err error) {
+		AfterAct: func(sum []int, rst string, err error) {
 			fmt.Println("group result is", sum, rst, err)
 		},
 	}
 
+	// start the aggregator
 	go func() {
 		_ = agg.Start()
 	}()
 
+	// send 10000 tasks to the aggregator by 100 goroutines concurrently
 	wg := &sync.WaitGroup{}
 	for i := 0; i < 100; i++ {
 		wg.Add(1)
@@ -47,12 +59,11 @@ func main() {
 		go func() {
 			defer wg.Done()
 			for j := 0; j < 100; j++ {
-				time.Sleep(10 * time.Millisecond)
+				time.Sleep(5 * time.Millisecond)
 				agg.TaskCh <- i + j
 			}
 		}()
 	}
-
 	wg.Wait()
 	_ = agg.Stop()
 }

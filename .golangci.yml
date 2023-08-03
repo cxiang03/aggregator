@@ -121,7 +121,6 @@ linters:
     - gocyclo # computes and checks the cyclomatic complexity of functions
     - godot # checks if comments end in a period
     - goimports # in addition to fixing imports, goimports also formats your code in the same style as gofmt
-    - gomnd # detects magic numbers
     - gomoddirectives # manages the use of 'replace', 'retract', and 'excludes' directives in go.mod
     - gomodguard # allow and block lists linter for direct Go module dependencies. This is different from depguard where there are different block types for example version constraints and module recommendations
     - goprintffuncname # checks that printf-like functions are named with f at the end
@@ -170,6 +169,7 @@ linters:
     #- goerr113 # [too strict] checks the errors handling expressions
     #- gofmt # [replaced by goimports] checks whether code was gofmt-ed
     #- gofumpt # [replaced by goimports, gofumports is not available yet] checks whether code was gofumpt-ed
+    #- gomnd # detects magic numbers
     #- grouper # analyzes expression groups
     #- importas # enforces consistent import aliases
     #- logrlint # [owner archived repository] checks logr arguments
@@ -195,15 +195,19 @@ linters:
 
 issues:
   exclude-rules:
+    - source: "(noinspection|TODO)"
+      linters: [ godot, lll ]
+    - source: "//noinspection"
+      linters: [ gocritic ]
     - source: "^//\\s*go:generate\\s"
       linters: [ lll ]
-    - path: "(test|example)"
+    - path: "main\\.go"
       linters:
         - dupl
         - forbidigo
         - funlen
+        - for
         - goconst
-        - gomnd
         - gosec
         - noctx
         - wrapcheck
