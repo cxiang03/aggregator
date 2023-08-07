@@ -15,8 +15,8 @@ golang v1.18+ required
 
 ## Examples
 
-* [simple](./examples/simple/main.go)
-* [mset](./examples/mset/main.go)
+* [simple](./example/simple/main.go)
+* [mset](./example/mset/main.go)
 
 ### there are many practical use cases in real world
 
