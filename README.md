@@ -21,14 +21,14 @@ golang v1.18+ required
 ### there are many practical use cases in real world
 
 * sync a bulk of documents into elasticsearch
-* write cache into redis by pipeline
-* write grouped quota data into redis by hmset
-* write metrics into clickhouse by batch (10K+)
+* write a group of data by single rpc call
+* write a group of quota data into redis by hmset
+* write metrics into clickhouse by batch, big batch like 10k rows
 
 ## How
-There is 3 type need to define on your own before init aggregator, which is even more important than aggregator functions.
+There is 3 types need to define on your own before init aggregator, which is even more important than aggregator functions.
 
-- T: task type - the original task waiting to group up.
+- T: task type - the original task waiting to group up. you need to define a wrapper struct with ctx if needed.
 - U: the grouped type - each work will gather tasks into this type before flush (really handler them in batch).
 - V: the result type - the result of each flush action.
 

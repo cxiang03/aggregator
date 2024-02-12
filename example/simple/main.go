@@ -21,9 +21,9 @@ func main() {
 	// * before action - print out the sum object ([]int)
 	// * after action - print out the sum object ([]int), result (string) and error (error)
 	agg := &aggregator.Aggregator[int, []int, string]{
-		WorkerCount:   5,
-		BatchSize:     50,
-		BatchInterval: 5 * time.Millisecond,
+		WorkerCount:   3,
+		BatchSize:     100,
+		BatchInterval: 100 * time.Millisecond,
 		NewSum: func() []int {
 			return []int{}
 		},
@@ -59,7 +59,7 @@ func main() {
 		go func() {
 			defer wg.Done()
 			for j := 0; j < 100; j++ {
-				time.Sleep(5 * time.Millisecond)
+				time.Sleep(10 * time.Millisecond)
 				agg.TaskCh <- i + j
 			}
 		}()

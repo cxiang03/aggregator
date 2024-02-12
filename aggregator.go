@@ -15,9 +15,9 @@ import (
 //   - BatchInterval - time interval to perform the action, if the number of tasks collected is less than BatchSize.
 //   - NewSum - function to create a new sum object (U) when worker is reset after performing the action.
 //   - Reduce - function to reduce the sum object (U) after getting a new task (T) with existing sum object (U).
-//   - BeforeAct - function to be called before performing the action. optional.
+//   - BeforeAct - function to be called before performing the action, like validation, optional.
 //   - Action - function to perform the action on the sum object (U) and return the result (V).
-//   - AfterAct - function to be called after performing the action. optional.
+//   - AfterAct - function to be called after performing the action, like error tracking, optional.
 type Aggregator[T any, U any, V any] struct {
 	DebugMode bool
 	closeCh   chan struct{}
@@ -26,8 +26,7 @@ type Aggregator[T any, U any, V any] struct {
 	WorkerCount   int
 	wg            *sync.WaitGroup
 	workers       []*worker[T, U, V]
-	TaskCh        chan<- T
-	taskCh        chan T
+	TaskCh        chan T
 	BatchSize     int
 	BatchInterval time.Duration
 
@@ -42,14 +41,13 @@ type Aggregator[T any, U any, V any] struct {
 func (a *Aggregator[T, U, V]) Start() error {
 	a.closeCh = make(chan struct{})
 	a.closedCh = make(chan struct{})
-
-	a.taskCh = make(chan T)
-	a.TaskCh = a.taskCh
+	a.TaskCh = make(chan T)
 
 	a.wg = &sync.WaitGroup{}
 	a.workers = make([]*worker[T, U, V], 0, a.WorkerCount)
 	for i := 0; i < a.WorkerCount; i++ {
 		w := &worker[T, U, V]{
+			sum:    a.NewSum(),
 			parent: a,
 		}
 		a.workers = append(a.workers, w)

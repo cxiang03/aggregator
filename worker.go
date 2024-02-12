@@ -24,13 +24,12 @@ func (w *worker[T, U, V]) run() {
 	w.timer = time.NewTimer(w.parent.BatchInterval)
 	defer w.timer.Stop()
 
-	w.reset()
 	for {
 		select {
 		case <-w.parent.closeCh:
 			w.flush()
 			return
-		case task := <-w.parent.taskCh:
+		case task := <-w.parent.TaskCh:
 			w.count++
 			w.sum = w.parent.Reduce(w.sum, task)
 			if w.count >= w.parent.BatchSize {
@@ -45,9 +44,6 @@ func (w *worker[T, U, V]) run() {
 // flush - executes the action on the sum and resets the worker state.
 func (w *worker[T, U, V]) flush() {
 	defer w.reset()
-	if w.count == 0 {
-		return
-	}
 
 	if w.parent.BeforeAct != nil {
 		if err := w.parent.BeforeAct(w.sum); err != nil {
@@ -64,6 +60,7 @@ func (w *worker[T, U, V]) flush() {
 
 // reset - resets the worker state.
 func (w *worker[T, U, V]) reset() {
+	w.timer.Stop()
 	w.timer.Reset(w.parent.BatchInterval)
 	w.count = 0
 	w.sum = w.parent.NewSum()
