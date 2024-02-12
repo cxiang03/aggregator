@@ -60,7 +60,9 @@ func (w *worker[T, U, V]) flush() {
 
 // reset - resets the worker state.
 func (w *worker[T, U, V]) reset() {
-	w.timer.Stop()
+	if !w.timer.Stop() {
+		<-w.timer.C
+	}
 	w.timer.Reset(w.parent.BatchInterval)
 	w.count = 0
 	w.sum = w.parent.NewSum()
