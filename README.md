@@ -1,6 +1,7 @@
 # Aggregator
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/cxiang03/aggregator.svg)](https://pkg.go.dev/github.com/cxiang03/aggregator)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cxiang03/aggregator)](https://goreportcard.com/report/github.com/cxiang03/aggregator)
 
 This is a generic batch processing library for golang. 
 You can group up and process batch of tasks into group or groups, which can help us to reduce loading of io.
