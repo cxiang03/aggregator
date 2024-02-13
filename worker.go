@@ -28,23 +28,24 @@ func (w *worker[T, U, V]) run() {
 		select {
 		case <-w.parent.closeCh:
 			w.flush()
+			w.reset(true)
 			return
 		case task := <-w.parent.TaskCh:
 			w.count++
 			w.sum = w.parent.Reduce(w.sum, task)
 			if w.count >= w.parent.BatchSize {
 				w.flush()
+				w.reset(true)
 			}
 		case <-w.timer.C:
 			w.flush()
+			w.reset(false)
 		}
 	}
 }
 
-// flush - executes the action on the sum and resets the worker state.
+// flush - executes the action on the sum.
 func (w *worker[T, U, V]) flush() {
-	defer w.reset()
-
 	if w.parent.BeforeAct != nil {
 		if err := w.parent.BeforeAct(w.sum); err != nil {
 			return
@@ -59,8 +60,11 @@ func (w *worker[T, U, V]) flush() {
 }
 
 // reset - resets the worker state.
-func (w *worker[T, U, V]) reset() {
-	if !w.timer.Stop() {
+func (w *worker[T, U, V]) reset(stopTimer bool) {
+	// stop the timer if it's not already stopped and reset it.
+	// for zombie timer issue, we need to drain the timer channel to avoid a leak.
+	// please refer timer.Reset() comments for details.
+	if stopTimer && !w.timer.Stop() {
 		<-w.timer.C
 	}
 	w.timer.Reset(w.parent.BatchInterval)
